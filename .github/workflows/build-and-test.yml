@@ -31,9 +31,6 @@ jobs:
     - name: Run unit tests
       run: dotnet test ${{ env.SOLUTION_FILE }} --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage"
 
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v4
-
     - name: Publish
       run: dotnet publish ${{ env.SOLUTION_FILE }} --configuration Release --no-build --output ${{github.workspace}}/publish
 

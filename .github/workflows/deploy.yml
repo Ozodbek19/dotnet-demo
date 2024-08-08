@@ -44,7 +44,12 @@ jobs:
           Import-Module WebAdministration
           Stop-Website -Name $using:env:IIS_WEBSITE_NAME
 
-          Start-Website -Name $using:env:IIS_WEBSITE_NAME
+          $site = Get-Website -Name $using:env:IIS_WEBSITE_NAME
+          if ($site.state -ne 'Started') {
+              Start-Website -Name $using:env:IIS_WEBSITE_NAME
+          } else {
+              Write-Host "Website $($using:env:IIS_WEBSITE_NAME) is already running."
+          }
         }
 
         Remove-PSSession $Session
