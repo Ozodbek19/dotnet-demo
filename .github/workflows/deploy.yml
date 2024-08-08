@@ -38,7 +38,7 @@ jobs:
         $Session = New-PSSession -ComputerName $env:IIS_SERVER_COMPUTER_NAME -Credential $Credential -Authentication Basic -SessionOption $SessionOption
 
         # Copy WebApp files
-        Copy-Item -Path "${{ github.workspace }}/artifacts/WebApp/*" -Destination $env:IIS_WEBSITE_PATH -ToSession $Session -Recurse -Force
+        Copy-Item -Path "${{ github.workspace }}/WebApp/*" -Destination $env:IIS_WEBSITE_PATH -ToSession $Session -Recurse -Force
 
         Invoke-Command -Session $Session -ScriptBlock {
           Import-Module WebAdministration
