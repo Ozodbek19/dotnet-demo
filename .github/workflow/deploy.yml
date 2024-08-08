@@ -1,0 +1,48 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: ['main']
+
+jobs:
+  deploy:
+    - name: Download WebApp Artifact
+      uses: dawidd6/action-download-artifact@v4
+      with:
+        github_token: ${{ secrets.ACCESS_TOKEN }}
+        workflow: build-and-test.yml
+        branch: develop
+        name: WebApp
+        path: ${{ github.workspace }}/WebApp
+
+    - name: Deploy to IIS
+      env:
+        IIS_SERVER_COMPUTER_NAME: ${{ secrets.IIS_SERVER_COMPUTER_NAME }}
+        IIS_SERVER_USERNAME: ${{ secrets.IIS_SERVER_USERNAME }}
+        IIS_SERVER_PASSWORD: ${{ secrets.IIS_SERVER_PASSWORD }}
+        IIS_WEBSITE_NAME: ${{ secrets.IIS_WEBSITE_NAME }}
+        IIS_WEBSITE_PATH: ${{ secrets.IIS_WEBSITE_PATH }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $SecurePassword = ConvertTo-SecureString $env:IIS_SERVER_PASSWORD -AsPlainText -Force
+        $Credential = New-Object System.Management.Automation.PSCredential ($env:IIS_SERVER_USERNAME, $SecurePassword)
+        
+        Set-Item WSMan:\localhost\Client\TrustedHosts -Value $env:IIS_SERVER_COMPUTER_NAME -Force
+
+        # Enable unencrypted traffic
+        winrm set winrm/config/client '@{AllowUnencrypted="true"}'
+
+        $SessionOption = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
+        $Session = New-PSSession -ComputerName $env:IIS_SERVER_COMPUTER_NAME -Credential $Credential -Authentication Basic -SessionOption $SessionOption
+
+        # Copy WebApp files
+        Copy-Item -Path "${{ github.workspace }}/artifacts/WebApp/*" -Destination $env:IIS_WEBSITE_PATH -ToSession $Session -Recurse -Force
+
+        Invoke-Command -Session $Session -ScriptBlock {
+          Import-Module WebAdministration
+          Stop-Website -Name $using:env:IIS_WEBSITE_NAME
+
+          Start-Website -Name $using:env:IIS_WEBSITE_NAME
+        }
+
+        Remove-PSSession $Session
