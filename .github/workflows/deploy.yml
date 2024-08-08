@@ -6,6 +6,8 @@ on:
 
 jobs:
   deploy:
+    runs-on: windows-latest
+    steps:
     - name: Download WebApp Artifact
       uses: dawidd6/action-download-artifact@v4
       with:
