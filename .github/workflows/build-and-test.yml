@@ -5,7 +5,7 @@ on:
     branches: ['develop']
 
 env:
-  DOTNET_VERSION: '6.0.0'
+  DOTNET_VERSION: '6.0.x'
   SOLUTION_FILE: 'dotnet-demo.generated.sln'
 
 jobs:
